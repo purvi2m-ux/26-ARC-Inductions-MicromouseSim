@@ -51,30 +51,39 @@ class StudentSolver(Node):
         
         cmd = Twist()
         
-        #-------- DEMO LOGIC, REMOVE THIS AND WRITE YOUR OWN ---------
-        # 1. Front is blocked -> Pivot strictly in place (do not move forward!)
-        # Increased threshold to 0.65 so it has room to spin without its 0.15 radius clipping the front wall
-        if d_front < 0.65:
-            cmd.linear.x = 0.0
-            cmd.angular.z = -1.5  # Spin clockwise (right)
-            
-        # 2. Left side is open -> Curve around the corner
-        elif d_left > 0.8:
-            cmd.linear.x = 0.3
-            cmd.angular.z = 1.2   # Turn left
-            
-        # 3. Wall hugging -> P-Controller
+        #-------- NEW LOGIC, WRITTEN  ---------
+
+        if not hasattr(self, '_mode'):
+            self._mode = 'follow_left'
+            self._turn_dir = 1.0
+        
+
+        # goal pocket: wide, open area
+        open_threshold = min(2.0, SENSOR_RANGE * 0.75)
+        if d_left > open_threshold and d_front > open_threshold and d_right > open_threshold:
+            cmd.linear.x = 0.8
+            cmd.angular.z = 0.0
+            self.cmd_pub.publish(cmd)
+            return
+
+
+        # normal left-wall-following maze logic
+        if d_left < 0.30:
+            cmd.linear.x = 0.35
+            cmd.angular.z = -0.8
+        elif d_left > 0.85:
+            cmd.linear.x = 0.35
+            cmd.angular.z = 0.8
         else:
-            cmd.linear.x = 0.5
-            
-            # The cell is 1.0 units wide. Perfect center is 0.5.
-            target_distance = 0.5 
-            error = d_left - target_distance
-            
-            # Multiply error by a gain to steer back to the center
-            cmd.angular.z = error * 3.0
-        #-----------------------------------------------------------------
-            
+            target = 0.55
+            error = d_left - target
+            cmd.linear.x = 0.45
+            cmd.angular.z = max(-1.0, min(1.0, error * 2.8))
+
+        # slight bias to keep a consistent turn direction when sides are similar
+        if abs(d_left - d_right) < 0.12:
+            cmd.angular.z = cmd.angular.z * 0.7 + 0.25 * self._turn_dir
+
         self.cmd_pub.publish(cmd)
 
 def main(args=None):
@@ -90,4 +99,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
