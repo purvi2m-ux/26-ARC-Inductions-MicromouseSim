@@ -55,8 +55,11 @@ class StudentSolver(Node):
 
         if not hasattr(self, '_mode'):
             self._mode = 'follow_left'
+            self._escape_dir = 1.0
+            self._escape_timer = 0
             self._turn_dir = 1.0
-        
+            self._stuck_counter = 0
+            self._last_pattern = None        
 
         # goal pocket: wide, open area
         open_threshold = min(2.0, SENSOR_RANGE * 0.75)
