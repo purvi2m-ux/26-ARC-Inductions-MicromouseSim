@@ -65,7 +65,7 @@ class StudentSolver(Node):
         if d_front < 0.45 and d_left < 0.45 and d_right < 0.45:
             self._mode = 'escape'
             self._escape_dir = 1.0 if d_left >= d_right else -1.0
-            self._escape_timer = 8
+            self._escape_timer = 18
 
         if self._mode == 'escape':
             if self._escape_timer <= 0:
