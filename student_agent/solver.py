@@ -58,14 +58,12 @@ class StudentSolver(Node):
             self._escape_dir = 1.0
             self._escape_timer = 0
             self._turn_dir = 1.0
-            self._stuck_counter = 0
-            self._last_pattern = None        
-       
+ 
         # emergency: fully trapped - reverse and rotate out more aggressively
         if d_front < 0.45 and d_left < 0.45 and d_right < 0.45:
             self._mode = 'escape'
             self._escape_dir = 1.0 if d_left >= d_right else -1.0
-            self._escape_timer = 18
+            self._escape_timer = 8
 
         if self._mode == 'escape':
             if self._escape_timer <= 0:
@@ -105,15 +103,21 @@ class StudentSolver(Node):
             cmd.linear.x = 0.35
             cmd.angular.z = 0.8
         else:
-            target = 0.55
-            error = d_left - target
             cmd.linear.x = 0.45
+            
+        # The cell is 1.0 units wide. Perfect center is 0.5
+            target_distance = 0.55 
+            error = d_left - target_distance
+            
+            # Multiply error by a gain to steer back to the center
             cmd.angular.z = max(-1.0, min(1.0, error * 2.8))
+       
 
         # slight bias to keep a consistent turn direction when sides are similar
         if abs(d_left - d_right) < 0.12:
             cmd.angular.z = cmd.angular.z * 0.7 + 0.25 * self._turn_dir
-
+        #-----------------------------------------------------------------
+        
         self.cmd_pub.publish(cmd)
 
 def main(args=None):
