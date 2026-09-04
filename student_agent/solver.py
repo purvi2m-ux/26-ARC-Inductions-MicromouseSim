@@ -65,7 +65,18 @@ class StudentSolver(Node):
             cmd.angular.z = 0.0
             self.cmd_pub.publish(cmd)
             return
+            
+        # if front is blocked, choose the open side but keep moving
+        if d_front < 0.72:
+            if d_left > d_right + 0.15:
+                self._turn_dir = 1.0
+            elif d_right > d_left + 0.15:
+                self._turn_dir = -1.0
 
+            cmd.linear.x = 0.22
+            cmd.angular.z = 1.05 * self._turn_dir
+            self.cmd_pub.publish(cmd)
+            return
 
         # normal left-wall-following maze logic
         if d_left < 0.30:
