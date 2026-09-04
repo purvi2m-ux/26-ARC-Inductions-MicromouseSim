@@ -60,7 +60,23 @@ class StudentSolver(Node):
             self._turn_dir = 1.0
             self._stuck_counter = 0
             self._last_pattern = None        
+       
+        # emergency: fully trapped - reverse and rotate out more aggressively
+        if d_front < 0.45 and d_left < 0.45 and d_right < 0.45:
+            self._mode = 'escape'
+            self._escape_dir = 1.0 if d_left >= d_right else -1.0
+            self._escape_timer = 8
 
+        if self._mode == 'escape':
+            if self._escape_timer <= 0:
+                self._mode = 'follow_left'
+            else:
+                self._escape_timer -= 1
+                cmd.linear.x = -0.32
+                cmd.angular.z = 1.45 * self._escape_dir
+                self.cmd_pub.publish(cmd)
+                return
+                
         # goal pocket: wide, open area
         open_threshold = min(2.0, SENSOR_RANGE * 0.75)
         if d_left > open_threshold and d_front > open_threshold and d_right > open_threshold:
